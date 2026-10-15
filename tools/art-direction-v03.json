@@ -1,0 +1,10 @@
+{
+  "method": "built-in image_gen",
+  "prompt": "Use case: style-transfer. Asset type: transparent game character sprite for a low-resolution pixel-art Godot game. Reference image 1 is identity only, NOT a detail or resolution target. Redesign this cyberpunk AI girl into VERY SIMPLE chunky retro pixel art, like a sprite whose entire character was drawn on a 48 pixels wide by 64 pixels tall canvas, then enlarged with nearest-neighbor. One single front-facing waist-up bust centered, complete silhouette with generous transparent margin. Preserve short blue-lavender bob, small coral hairclip, anime amber eyes, dark navy oversized jacket with cream collar, coral tie. Big expressive anime eyes made of just 3-5 square blocks, small simple mouth. Youthful adult anime proportions, slight shy wary expression. Strict flat 12-color palette: midnight navy, cobalt, periwinkle, pale blue, cream, warm skin, amber and coral. Huge unmistakable square pixel clusters, thick stepped outlines, exceptionally simplified large hair tufts and clothing, no tiny decorative hardware. Face only about 18 pixels wide. No smooth shading, no gradients, no fine strands, no antialiasing, no dithering, no high-detail illustration, no background, no text, no multiple poses. This should visually look like a genuine very low resolution 1990s JRPG portrait sprite, not a detailed painting with a pixel filter. Output transparent alpha.",
+  "asset": "project/assets/v3/echo-chunky.png",
+  "references": [
+    "https://github.com/MisakaZentai/world-execute-me-dsh-pv",
+    "https://github.com/Funkierry/dsh-thought-window"
+  ],
+  "note": "Reference choreography studied via author source and preview; no reference visual/audio assets distributed."
+}

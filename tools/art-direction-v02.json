@@ -1,0 +1,17 @@
+{
+  "method": "Built-in image_gen; no API/CLI fallback.",
+  "files": [
+    "project/assets/v2/echo-patient.png",
+    "project/assets/v2/echo-expressions.png"
+  ],
+  "portrait_prompt": "Use case: stylized-concept. Asset type: original game character sprite portrait for a 2D cyberpunk medical mystery game, ECHO CLINIC. Draw one original adult female-presenting AI patient, chest-up, front three-quarter view, facing slightly left toward the doctor, engaging but guarded expression. Short asymmetrical silver-lavender bob with long left side lock, one coral hair clip, vivid amber eyes, small cyan circuit mark beneath one eye. Fully clothed oversized dark indigo high-collar jacket with cream panels, coral-orange neck ribbon, small yellow warning-tag accessory, segmented cyan implant at collar. Fine PC-98 anime pixel art, carefully designed hard pixel clusters, limited palette of deep plum, cobalt, lavender, warm skin, amber, mint and hot pink, solid stepped shading, dithering only in shadow planes, no smooth painting or gradients, no realistic rendering. Strong readable face, clean silhouette, crisp eyes; pixels must remain legible at 160x176 game resolution. Composition: single character fills canvas with only small margins, entire head and shoulders visible, torso cropped at lower edge, no duplicate or sheet panels, hands not necessary. Genuine transparent background, no scenery, no UI, no lettering, no logo, no border. Original character, not any existing character.",
+  "expression_prompt": "Use case: identity-preserve. Asset type: production expression sprite atlas for the same original cyberpunk anime AI patient in the input image. Use the input as the identity and outfit reference. Create a strictly regular 2 by 2 sprite sheet, four equal rectangular cells, no gaps, genuinely transparent background. In every cell show exactly the same chest-up crop, same scale, same position within cell, head fully visible, the same silver-lavender bob, coral clip, amber eyes, cyan cheek circuit, indigo and cream coat, coral ribbon and yellow tag. Change only facial expression: upper-left guarded neutral looking slightly left; upper-right eyes tense and mouth parted, frightened by a painful memory; lower-left brows lowered and eyes direct, determined honest confession; lower-right soft relieved small smile, still thoughtful. The face must be recognizable as the exact same person across all four cells. Hard-edged PC-98 pixel art, each cell readable at 156 by 170 pixels. Carefully drawn clean pixel clusters, solid limited-color shading, no soft gradients, no extra figures, no text, no labels, no background, no borders or dividing lines. Each cell must be independently usable as a game portrait with transparent alpha; all four characters remain entirely within their own equal cell. Wide enough shoulders, clean consistent framing.",
+  "references": [
+    "https://github.com/Funkierry/dsh-thought-window",
+    "https://github.com/MisakaZentai/world-execute-me-dsh-pv",
+    "https://github.com/MisakaZentai/world-execute-me-dsh-pv/blob/main/docs/HOW_IT_WORKS.md",
+    "https://sukebangames.itch.io/valhalla-bar",
+    "https://github.com/TakWolf/fusion-pixel-font"
+  ],
+  "notes": "Portrait and expression atlas are original AI-generated game assets. Room, instruments, pixel transitions and synthesized sounds are code-generated. Reference game/PV artwork and music are not bundled. Asset selection and game use are experimental."
+}
