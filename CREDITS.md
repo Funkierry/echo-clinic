@@ -5,6 +5,7 @@
 - **Noto Sans CJK / JetBrains Mono**：早期界面使用的字体，保留相应 OFL 声明。
 - **角色像素画像**：为本项目生成并调整的美术资源，生成方式及方向记录在 `tools/art-direction-v02.json`、`tools/art-direction-v03.json`。
 - **雨声与合成背景音乐**：程序合成；生成脚本为 `tools/prepare_audio_v2.py`。没有分发参考视频的原始音乐。
+- **v0.8 / v0.9 交互音效与分轨环境音乐**：由 `tools/synth_v8.py` 程序合成，资源位于 `project/assets/audio_v8/`。
 
 视觉演出参考来自用户此前的 [dsh-thought-window](https://github.com/Funkierry/dsh-thought-window) 项目及其视频灵感。参考视频的预览图片、下载材料不随本仓库发布。
 

@@ -22,7 +22,7 @@ renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
 textures/default_filters/use_nearest_mipmap_filter=false
 environment/defaults/default_clear_color=Color(0.055, 0.04, 0.12, 1)
-textures/canvas_textures/default_texture_filter=1
+textures/canvas_textures/default_texture_filter=0
 
 [audio]
 driver/enable_input=false
@@ -31,3 +31,7 @@ driver/enable_input=false
 gdscript/warnings/integer_division=0
 gdscript/warnings/shadowed_variable=0
 
+
+[autoload]
+
+Sfx="*res://scripts/v9/audio.gd"

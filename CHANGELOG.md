@@ -4,6 +4,20 @@
 
 后续改动从此处记录，发布时归入新的版本号。
 
+## [0.9.1-prototype] — 2026-10-17
+
+同步 v0.8 系列迭代与 v0.9 桌面原型，发布 Windows 预发行包。
+
+- MEDIC-OS 98 像素桌面、任务栏、开始菜单、图标拖动与框选、右键菜单、窗口缩放与最大化。
+- 第一幕任务管理器与患者监护；日志对照疼痛曲线、拖动证据到聊天、主动选择话题。
+- 记事本及随存档保存的笔记、含新线索的回收站、邮件预览、控制面板与运行框。
+- 算力出租与异常报告奖励；继承 v0.8 的上下文、记忆置顶、院方工单与出售记忆系统。
+- 汇入 v0.8 的新剧本、候选词和折叠思考、拖卡解谜、按住签字、环境音乐与反馈音效。
+- 标题菜单、教学、自动与手动存档、损坏存档备份恢复。
+- 保留后续各幕与第二夜的检查台流程；这些幕的专用桌面应用尚未全部完成。
+- 源码与 Windows EXE 分别验证 344 项；本次使用本地 HTTP 模拟接口，未重跑真实 DeepSeek 测试。
+- 更新测试与打包入口、版本说明及可移植导出配置。
+
 ## [0.7.0] — 2026-10-16
 
 首个 GitHub 版本基线，Windows Demo 预发行。
@@ -35,5 +49,6 @@
 - v0.4：两幕病例、患者隐瞒、重开后的新线索与治疗约定。
 - v0.3 / v0.2 / v0.1：像素界面、演出、角色与诊疗台实验。
 
-[Unreleased]: https://github.com/Funkierry/echo-clinic/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/Funkierry/echo-clinic/compare/v0.9.1-prototype...HEAD
+[0.9.1-prototype]: https://github.com/Funkierry/echo-clinic/releases/tag/v0.9.1-prototype
 [0.7.0]: https://github.com/Funkierry/echo-clinic/releases/tag/v0.7.0
