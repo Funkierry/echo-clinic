@@ -56,7 +56,7 @@ func model_tests() -> void:
  check("model cannot highlight nonexistent second reply",Director.validate_text({"reply":"我还在听。","focus":"second"},s).focus=="none")
  s.dispatch("accept"); s.dispatch("receipt"); s.dispatch("trace_finish"); s.dispatch("memory_listen"); s.dispatch("memory_undo")
  var revealed=Director.context(s,[],"为什么骗我")
- check("uncovered truth changes patient stance",revealed.stance.contains("别再否认") and JSON.stringify(revealed.public_facts).contains("我想离开这里"))
+ check("uncovered truth changes patient stance",revealed.stance.contains("直接承认想走") and JSON.stringify(revealed.public_facts).contains("我想离开这里"))
  check("known truth can be discussed",Director.validate_text({"reply":"我想离开。但你还没有答应过放我走。","focus":"none"},s).ok)
  var history=[["you","OLDER_LOOP_SECRET"],["sys","──── 医生记录保留 / 患者快照恢复 ────"],["you","本轮你好"]]
  s.reboot()

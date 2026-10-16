@@ -15,6 +15,12 @@ func setup(main) -> void:
  var face=Panel.new(); face.position=Vector2(4,4); face.size=Vector2(130,170); face.add_theme_stylebox_override("panel",UI.bevel(Color("05080f"),true)); face.mouse_filter=MOUSE_FILTER_IGNORE; add_child(face)
  var p=Ascii.new(); p.reduced=host.reduced_motion or host.self_testing; add_child(p)
  p.setup(Rect2(7,7,124,164),host.current_mood,false)
+ # Her face can be clicked; she does not like being stared at.
+ var poke=Control.new(); poke.position=Vector2(4,4); poke.size=Vector2(130,170); poke.mouse_filter=MOUSE_FILTER_STOP
+ poke.tooltip_text="E-017"; poke.mouse_default_cursor_shape=Control.CURSOR_POINTING_HAND
+ poke.gui_input.connect(func(e):
+  if e is InputEventMouseButton and e.pressed and e.button_index==MOUSE_BUTTON_LEFT: host.poke_portrait())
+ add_child(poke)
  UI.label(self,"E-017 · 回声",Rect2(142,6,160,14),UI.CYAN)
  var stab=state.stability-(15 if host.profile.renting else 0)
  UI.label(self,"稳定度  %d%%"%maxi(0,stab),Rect2(142,26,160,14),UI.PAPER)

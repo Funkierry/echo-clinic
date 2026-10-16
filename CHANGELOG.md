@@ -4,6 +4,19 @@
 
 后续改动从此处记录，发布时归入新的版本号。
 
+## [0.9.5-prototype] — 2026-10-17
+
+汇入 v0.9.2 至 v0.9.5 的角色、演出、配色与动效迭代，发布 Windows 预发行包。
+
+- 重写两夜剧情、调查反应、结局与在线 AI 人设，突出回声要强、目的明确、隐忍的性格。
+- 关键线索与结局新增全屏剪辑：条带撕裂、RGB 错位、代码打字、大字盖章、报错窗口和立绘切片，可点击或按空格跳过。
+- 聊天的摘录、存疑、引用按钮接入实际功能；患者头像、邮件收取及窗口图标增加交互。
+- 调整聊天气泡、字号、选项区高度和稳定度条；新增活动桌面生命体征与倒计时。
+- 应用使用独立强调色；像素城市夜景随剧情换色，增加多层鼠标视差、雨、灯光、薄雾、飞机、流星和闪电。
+- 增加图标、窗口、菜单、通知、选项与头像动效，遵循减弱动效设置。
+- Windows 导出包含断行数据，修复中文换行问题。
+- 源码与 Windows EXE 各通过 366 项本地检查；本次同步未重跑真实 DeepSeek 测试。
+
 ## [0.9.1-prototype] — 2026-10-17
 
 同步 v0.8 系列迭代与 v0.9 桌面原型，发布 Windows 预发行包。
@@ -49,6 +62,7 @@
 - v0.4：两幕病例、患者隐瞒、重开后的新线索与治疗约定。
 - v0.3 / v0.2 / v0.1：像素界面、演出、角色与诊疗台实验。
 
-[Unreleased]: https://github.com/Funkierry/echo-clinic/compare/v0.9.1-prototype...HEAD
+[Unreleased]: https://github.com/Funkierry/echo-clinic/compare/v0.9.5-prototype...HEAD
+[0.9.5-prototype]: https://github.com/Funkierry/echo-clinic/releases/tag/v0.9.5-prototype
 [0.9.1-prototype]: https://github.com/Funkierry/echo-clinic/releases/tag/v0.9.1-prototype
 [0.7.0]: https://github.com/Funkierry/echo-clinic/releases/tag/v0.7.0

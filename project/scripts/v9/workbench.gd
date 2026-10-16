@@ -446,12 +446,12 @@ func _trace() -> void:
 
 func _trace_second() -> void:
  UI.label(content,"已做过的检查直接复用 / 只看新出现的句子",Rect2(16,40,422,16),UI.MUTED,10)
- _paper(Rect2(16,64,206,180),"上一夜 / 23:47:08","医生，先别按。\n\n听我说完，再决定\n我哪里坏了。",UI.BLUE)
+ _paper(Rect2(16,64,206,180),"上一夜 / 23:47:08","医生。那个亮着的\n按钮，先别碰。\n\n给我十分钟。",UI.BLUE)
  _slot("diff",Rect2(16,64,206,180),["tonight"],"",UI.PINK).dashed=false
  if not state.seen("compare"):
-  _card("tonight","这一夜 / 23:47:07","医生，还是先别\n打开第三页。\n……其实，我是想说：\n请先听我说完。",UI.PINK,Rect2(232,64,206,180),false,true,"talk")
+  _card("tonight","这一夜 / 23:47:07","医生，这次别从\n第三页开始。\n……我是说，\n给我十分钟。\n和上次一样。",UI.PINK,Rect2(232,64,206,180),false,true,"talk")
  else:
-  _paper(Rect2(232,64,206,180),"差异","+ 还是\n+ 第三页\n\n上一夜都没有。",UI.PINK)
+  _paper(Rect2(232,64,206,180),"差异","+ 这次\n+ 第三页\n+ 和上次一样\n\n上一夜都没有。",UI.PINK)
   _card("page3","第三页","她从哪里知道的？",UI.GOLD,Rect2(16,262,140,100),false,true,"page")
   _slot("follow",Rect2(232,262,206,100),["page3"],"追查",UI.GOLD)
 

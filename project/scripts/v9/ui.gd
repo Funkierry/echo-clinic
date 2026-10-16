@@ -12,6 +12,10 @@ const CYAN = Color("5fe0c8")
 const GOLD = Color("ffc56e")
 const BLUE = Color("74a9ff")
 const PURPLE = Color("b39dff")
+const GREEN = Color("8be06a")
+const ORANGE = Color("ff9f5a")
+const MAGENTA = Color("e56bd6")
+const SLATE = Color("a0aec4")
 ## Window chrome.
 const FACE = Color("222a3b")
 const FACE_HI = Color("43506c")
@@ -182,7 +186,8 @@ static func button(parent: Node, caption: String, r: Rect2, callback: Callable, 
  b.size = r.size
  b.add_theme_font_override("font", mono())
  b.add_theme_font_size_override("font_size", 12)
- var face = FACE.lerp(accent, 0.32) if solid else FACE
+ # Every button carries a little of its accent, so screens read by colour, not only by label.
+ var face = FACE.lerp(accent, 0.32) if solid else FACE.lerp(accent, 0.13)
  var text_color = PAPER if solid else accent.lerp(PAPER, 0.35)
  b.add_theme_color_override("font_color", text_color)
  b.add_theme_color_override("font_hover_color", PAPER)
@@ -190,7 +195,7 @@ static func button(parent: Node, caption: String, r: Rect2, callback: Callable, 
  b.add_theme_color_override("font_focus_color", text_color)
  b.add_theme_color_override("font_disabled_color", DIM)
  b.add_theme_stylebox_override("normal", bevel(face))
- b.add_theme_stylebox_override("hover", bevel(face.lightened(0.12)))
+ b.add_theme_stylebox_override("hover", bevel(FACE.lerp(accent, 0.26 if not solid else 0.42)))
  b.add_theme_stylebox_override("pressed", bevel(face.darkened(0.1), true))
  b.add_theme_stylebox_override("disabled", bevel(FACE.darkened(0.25)))
  b.add_theme_stylebox_override("focus", StyleBoxEmpty.new())

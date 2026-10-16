@@ -53,7 +53,7 @@ func model_checks() -> void:
  check("12 first-act choice combinations reach an ending",all_first)
  var trusted=to_decision(true,false)
  var skeptical=to_decision(false,true)
- check("accepted false memory changes later confrontation",JSON.stringify(Story.opening(trusted)).contains("你刚才说不想离开") and not JSON.stringify(Story.opening(skeptical)).contains("你刚才说不想离开"))
+ check("accepted false memory changes later confrontation",JSON.stringify(Story.opening(trusted)).contains("那份病历写错了") and not JSON.stringify(Story.opening(skeptical)).contains("那份病历写错了"))
  s=to_decision()
  s.dispatch("decide","treat")
  var original=s.proposal.duplicate()
@@ -182,11 +182,11 @@ func save_roundtrip(name: String) -> void:
 func cinematic(kind: String,filename: String) -> void:
  var texture=ImageTexture.create_from_image(app.get_viewport().get_texture().get_image())
  app.cinema.play(Story.beat(kind,app.state),texture,false)
- app.cinema.tween.pause(); app.cinema.progress=0.46
+ app.cinema.set_process(false); app.cinema.t=app.cinema.length*0.46; app.cinema.queue_redraw()
  await app.get_tree().process_frame
  await app.capture(filename)
- check("cinematic renders / "+kind,app.cinema.running and not app.cinema.reduced and app.cinema.progress==0.46)
- app.cinema.finish()
+ check("cinematic renders / "+kind,app.cinema.running and not app.cinema.reduced)
+ app.cinema.set_process(true); app.cinema.finish()
 
 func run(root) -> void:
  app=root

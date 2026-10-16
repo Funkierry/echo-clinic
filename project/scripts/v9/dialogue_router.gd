@@ -218,6 +218,6 @@ static func confirmation(s,id: String,value: Variant=null) -> Dictionary:
  return {"title":title,"detail":detail,"phrase":phrase}
 
 static func redirect(s, turn: int) -> String:
- var lines=["医生，你问的已经不在这间诊室里了。我还在这里，等你听完刚才那句话。","那些事情我不知道。我能告诉你的，是我记得的这部分；你也可以继续核对它。","你可以换一种问法，但别替我换一个身份。我叫回声。"]
+ var lines=["那不在这间诊室里。我们的十分钟，还在。","那些我不知道。我知道的，都在我说过的话里，你可以去对。","换个问法可以。换我的名字不行。我叫回声。"]
  if s.phase==Case.Phase.END: return "这次接诊已经结束。你的病历还留在诊疗台上。"
  return lines[turn%lines.size()]

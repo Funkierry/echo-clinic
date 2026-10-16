@@ -30,6 +30,9 @@ var last_title_click: int=0
 var bounds: Rect2=Rect2(0,0,1100,576)
 var reduced: bool=false
 var buttons: Dictionary={}
+## Title-bar colour; each app has its own.
+var accent: Color=Color("3c64b8")
+var sheen: float=0.0
 
 func setup(id: String,caption: String,rect: Rect2,icon_name: String="",can_close: bool=true,can_min: bool=true,can_resize: bool=false) -> void:
  app_id=id; title=caption; icon=icon_name; closable=can_close; resizable=can_resize
@@ -110,6 +113,12 @@ func shrink_to(point: Vector2,done: Callable) -> void:
   position=home; scale=Vector2.ONE; modulate.a=1.0
   done.call())
 
+func _process(delta: float) -> void:
+ if reduced or not active or not visible: return
+ sheen+=delta
+ if fmod(sheen,5.0)<1.0: queue_redraw()
+ elif fmod(sheen-delta,5.0)<1.0: queue_redraw()
+
 func _grip_rect() -> Rect2:
  return Rect2(size-Vector2(GRIP,GRIP),Vector2(GRIP,GRIP))
 
@@ -117,6 +126,9 @@ func _gui_input(event: InputEvent) -> void:
  if event is InputEventMouseButton and event.button_index==MOUSE_BUTTON_LEFT:
   if event.pressed:
    focused.emit(app_id)
+   # The icon in the corner is the window menu, as on the real thing.
+   if not icon.is_empty() and event.position.x<22 and event.position.y<TITLE_H:
+    title_menu.emit(app_id,global_position+Vector2(4,TITLE_H)); return
    if resizable and not maximized and _grip_rect().has_point(event.position):
     sizing=true; drag_off=size-event.position; return
    if event.position.y<TITLE_H+3:
@@ -151,9 +163,14 @@ func _draw() -> void:
   var steps=24
   for i in range(steps):
    var x0=bar.position.x+bar.size.x*i/steps
-   draw_rect(Rect2(x0,bar.position.y,bar.size.x/steps+1,bar.size.y),UI.TITLE_A.lerp(UI.TITLE_B,float(i)/steps))
+   draw_rect(Rect2(x0,bar.position.y,bar.size.x/steps+1,bar.size.y),accent.darkened(0.62).lerp(accent.darkened(0.12),float(i)/steps))
  else:
   draw_rect(bar,UI.TITLE_OFF)
+ if active and not reduced:
+  var k=fmod(sheen,5.0)
+  if k<1.0:
+   var x=bar.position.x-40+(bar.size.x+80)*ease(k,0.6)
+   for i in range(6): draw_rect(Rect2(x+i*4,bar.position.y,4,bar.size.y),Color(1,1,1,0.07*(1.0-absf(i-2.5)/3.0)))
  var tx=8.0
  if not icon.is_empty():
   Icons.draw(self,icon,Rect2(6,5,14,14),UI.PAPER,1.0); tx=24.0

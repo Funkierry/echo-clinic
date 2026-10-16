@@ -35,3 +35,7 @@ gdscript/warnings/shadowed_variable=0
 [autoload]
 
 Sfx="*res://scripts/v9/audio.gd"
+
+[internationalization]
+
+locale/include_text_server_data=true

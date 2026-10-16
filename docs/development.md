@@ -7,7 +7,7 @@
 - Git；从命令行发布 Release 可使用 GitHub CLI。
 - Windows 导出前，在 Godot 中安装与引擎版本一致的导出模板。
 
-当前版本为 v0.9.1-prototype。`project/main.tscn` 绑定 `project/scripts/v9/main.gd`，音频自动加载为 `v9/audio.gd`。导出配置使用默认模板，无本机绝对路径。
+当前版本为 v0.9.5-prototype。`project/main.tscn` 绑定 `project/scripts/v9/main.gd`，音频自动加载为 `v9/audio.gd`。导出配置使用默认模板，无本机绝对路径。
 
 | 文件 | 职责 |
 |---|---|
@@ -31,20 +31,20 @@
 python tools/test_v9.py --godot "C:/path/to/Godot_v4.7.2-stable_win64_console.exe"
 ```
 
-测试器导入资源、启动仅监听本机临时端口的模拟服务，并运行游戏自测；完成后关闭服务。不需要真实 Key，不请求 DeepSeek。当前为 344 项，截图和报告在 `captures/v0.9.1-prototype/`。需可用的图形环境，只有资源导入阶段使用 `--headless`。
+测试器导入资源、启动仅监听本机临时端口的模拟服务，并运行游戏自测；完成后关闭服务。不需要真实 Key，不请求 DeepSeek。当前为 366 项，截图和报告在 `captures/v0.9.5-prototype/`。需可用的图形环境，只有资源导入阶段使用 `--headless`。
 
 ## Windows 导出与打包
 
 ```powershell
-New-Item -ItemType Directory -Force release/EchoClinic-Windows-v0.9.1-prototype | Out-Null
-& "C:/path/to/Godot_console.exe" --headless --path project --export-release "Windows Desktop" "../release/EchoClinic-Windows-v0.9.1-prototype/EchoClinic.exe"
-python tools/test_v9.py --exe "C:/absolute/path/to/echo-clinic/release/EchoClinic-Windows-v0.9.1-prototype/EchoClinic.exe"
+New-Item -ItemType Directory -Force release/EchoClinic-Windows-v0.9.5-prototype | Out-Null
+& "C:/path/to/Godot_console.exe" --headless --path project --export-release "Windows Desktop" "../release/EchoClinic-Windows-v0.9.5-prototype/EchoClinic.exe"
+python tools/test_v9.py --exe "C:/absolute/path/to/echo-clinic/release/EchoClinic-Windows-v0.9.5-prototype/EchoClinic.exe"
 # 先把要发布的源码、文档和资源加入 Git 暂存区。
 git add project tools README.md README-v0.9.md CHANGELOG.md docs CREDITS.md
 python tools/package_v8.py
 ```
 
-`package_v8.py` 沿用既有文件名，当前目标为 v0.9.1-prototype。要求源码与 EXE 两份报告通过、检查数量一致且不少于 344。输出 Windows ZIP、Godot 源码 ZIP、许可证、截图、验证报告和 SHA-256 校验文件。
+`package_v8.py` 沿用既有文件名，当前目标为 v0.9.5-prototype。要求源码与 EXE 两份报告通过、检查数量一致且不少于 366。输出 Windows ZIP、Godot 源码 ZIP、许可证、截图、验证报告和 SHA-256 校验文件。
 
 源码 ZIP 按 Git 跟踪清单读取工作区文件，因此新增文件必须先加入暂存区。忽略的本地缓存、存档、密钥和导出文件不会进入源码包。
 
@@ -52,7 +52,7 @@ python tools/package_v8.py
 
 ## 版本维护
 
-日常迭代可从 `main` 创建功能分支，修改后运行相关检查并提交。发布时更新 `CHANGELOG.md`、README、导出版本及测试/打包目录，提交后给该提交打标签。v0.7.0 保留为首个 GitHub 基线，本次 v0.9.1-prototype 汇总此前未上传的 v0.8 系列与桌面原型。
+日常迭代可从 `main` 创建功能分支，修改后运行相关检查并提交。发布时更新 `CHANGELOG.md`、README、导出版本及测试/打包目录，提交后给该提交打标签。v0.7.0 保留为首个 GitHub 基线，v0.9.1-prototype 为桌面原型基线；本次 v0.9.5-prototype 汇入 v0.9.2 至 v0.9.5 的角色与演出迭代。
 
 ## 存档与 AI
 

@@ -116,7 +116,7 @@ func economy() -> void:
  check("her name is not for sale",not sale.sell("name"))
  check("selling changes how she confronts you later",JSON.stringify(Story.opening(sale)).contains("卖了我的") == false)
  sale.dispatch("letter_finish")
- check("act four notices the sale",JSON.stringify(Story.opening(sale)).contains("卖了我的"))
+ check("act four notices the sale",JSON.stringify(Story.opening(sale)).contains("卖了我"))
  var bounty=Case.new()
  check("work order needs the exam first",not bounty.dispatch("bounty").ok)
  bounty.dispatch("accept"); bounty.dispatch("receipt"); bounty.dispatch("trace_finish")
@@ -440,11 +440,74 @@ func desktop_economy() -> void:
  await app.capture("16-start-menu")
  app.desktop.toggle_start()
  await desktop_interactions()
+ await interactions_and_cuts()
 
 func press(target: Control,id: String,button: int,at: Vector2) -> void:
  for pressed in [true,false]:
   var e=InputEventMouseButton.new(); e.button_index=button; e.pressed=pressed; e.position=at-target.global_position; e.global_position=at
   app.desktop._icon_input(id,e)
+
+func interactions_and_cuts() -> void:
+ reset()
+ await execute("accept"); await settle()
+ # Message actions.
+ var b=Button.new()
+ app._message_action("摘录",b,"echo","十分钟，从现在算。")
+ check("excerpt copies her line into your notes",app.profile.notes.contains("十分钟，从现在算。") and b.disabled)
+ app._message_action("存疑",Button.new(),"echo","没事。不碍事。"); await settle()
+ check("doubting a line she is hiding behind gets a reaction",app.state.seen("doubt_fine") and app.history_data.back()[1].contains("问号"))
+ var n=app.history_data.size()
+ app._message_action("存疑",Button.new(),"echo","没事。"); await settle()
+ check("she reacts to the same doubt only once",app.history_data.size()==n)
+ app._message_action("引用",Button.new(),"echo","我没什么大毛病。")
+ check("quote puts her words in the composer",app.composer.text.begins_with("你说「我没什么大毛病"))
+ app.composer.clear()
+ check("action buttons sit under her messages",find_button(app.history,"摘录")!=null and find_button(app.history,"存疑")!=null)
+ # Mail fetch brings one reminder per act.
+ app.mail_extra=[]
+ app.fetch_mail(); app.fetch_mail()
+ check("fetching mail brings one reminder per act",app.mail_extra.size()==1 and app._mails()[0].subject.contains("催办"))
+ # Her portrait in the monitor reacts to being clicked.
+ app.poke_portrait(); await settle()
+ check("clicking her portrait gets a line",app.history_data.back()[1]=="看够了吗？")
+ # The chat tray sizes to its chips.
+ check("the conversation gets the room the chips do not use",app.scroll.size.y>330 and app.suggestions.size.y<=72)
+ await app.capture("27-chat")
+ # The city outside follows the acts.
+ var t0=Time.get_ticks_usec()
+ app.desktop.set_wallpaper("story")
+ print("PAINT_MS ",(Time.get_ticks_usec()-t0)/1000.0)
+ var sc=app.desktop.scene
+ check("the wallpaper is layered: sky, far city, near city, effects",sc.get_node_or_null("sky")!=null and sc.get_node_or_null("far")!=null and sc.get_node_or_null("near")!=null and sc.get_node_or_null("fx_front")!=null and sc.get_node_or_null("fx_back")!=null)
+ check("the sky has twinkling stars and flickering windows",sc.get_meta("data").stars.size()>20 and sc.get_meta("data").flicker.size()>10)
+ app.desktop.fx_test=true
+ for tt in [1.3,4.1]:
+  app.desktop.time=tt; app.desktop._parallax(); await app.get_tree().process_frame
+  await app.capture("31-live-sky-%d"%int(tt*10))
+ app.desktop.scene_act=4; app.desktop.time=13.02; app.desktop._parallax(); await app.get_tree().process_frame
+ await app.capture("31-lightning")
+ app.desktop.scene_act=app.state.phase; app.desktop.fx_test=false; app.desktop._parallax()
+ app.desktop.set_wallpaper("story")
+ check("the wallpaper is the city at this act",app.desktop.story_key=="1/false")
+ for act in [3,4,6]:
+  app.desktop.set_story(act,false); await app.get_tree().process_frame
+  await app.capture("28-sky-act%d"%act)
+ app.desktop.set_story(app.state.phase,app.state.later())
+ check("each act has its own sky",app.desktop.story_key=="1/false" and app.desktop.neon==Color("ff7d92"))
+ check("apps have their own colours",app.desktop.spec_of("taskmgr").color==UI.GREEN and app.desktop.spec_of("mail").color==UI.GOLD)
+ var tw=app.desktop.open("taskmgr"); await settle()
+ check("a window's title bar takes its app's colour",tw.accent==UI.GREEN)
+ await app.capture("29-colours")
+ app.desktop.close_all()
+ # Cuts at the key beats.
+ for kind in ["receipt","recover","rename","payload","forgery","rewind","erase","bridge"]:
+  var tex=ImageTexture.create_from_image(app.get_viewport().get_texture().get_image())
+  app.cinema.play(Story.beat(kind,app.state),tex,false)
+  app.cinema.set_process(false); app.cinema.t=app.cinema.length*(0.62 if kind in ["receipt","erase"] else 0.5); app.cinema.queue_redraw()
+  await app.get_tree().process_frame
+  await app.capture("30-cut-"+kind)
+  check("key beat has its own cut / "+kind,app.cinema.running and app.cinema.shots.size()>=3 and app.cinema.length>2.0)
+  app.cinema.set_process(true); app.cinema.finish()
 
 func desktop_interactions() -> void:
  var d=app.desktop

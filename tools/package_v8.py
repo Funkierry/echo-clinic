@@ -4,7 +4,7 @@ from pathlib import Path
 import hashlib, json, re, shutil, subprocess, zipfile
 
 root = Path(__file__).resolve().parents[1]
-VERSION = '0.9.1-prototype'
+VERSION = '0.9.5-prototype'
 release = root / f'release/EchoClinic-Windows-v{VERSION}'
 source_report_path = root / f'captures/v{VERSION}/test-report.json'
 source_report = json.loads(source_report_path.read_text(encoding='utf-8'))
@@ -12,7 +12,7 @@ assert source_report['passed'] and all(source_report['checks'].values()), 'sourc
 export_report_path = root / f'captures/v{VERSION}-export/test-report.json'
 export_report = json.loads(export_report_path.read_text(encoding='utf-8'))
 assert export_report['passed'] and all(export_report['checks'].values()), 'exported exe self-test failed'
-assert export_report['count'] >= 344, export_report['count']
+assert export_report['count'] >= 366, export_report['count']
 assert source_report['count'] == export_report['count'], 'source and export check counts differ'
 exe = release / 'EchoClinic.exe'
 assert exe.is_file()
@@ -21,10 +21,10 @@ shutil.copy2(root / 'README-v0.9.md', release / 'README.md')
 shutil.copy2(export_report_path, release / 'export-test-report.json')
 shutil.copy2(source_report_path, release / 'source-test-report.json')
 shots = root / f'captures/v{VERSION}-export'
-for name, target in [('01-clinic.png', 'preview.png'), ('16-start-menu.png', 'start-menu.png'), ('19-context-menu.png', 'context-menu.png'), ('21-recycle.png', 'recycle.png'), ('23-welcome.png', 'welcome.png')]:
+for name, target in [('01-clinic.png', 'preview.png'), ('16-start-menu.png', 'start-menu.png'), ('19-context-menu.png', 'context-menu.png'), ('30-cut-receipt.png', 'cut-receipt.png'), ('30-cut-recover.png', 'cut-recover.png'), ('27-chat.png', 'chat.png'), ('28-sky-act4.png', 'sky-act4.png'), ('28-sky-act6.png', 'sky-dawn.png'), ('29-colours.png', 'colours.png'), ('31-live-sky-13.png', 'live-sky.png'), ('31-lightning.png', 'lightning.png')]:
     shutil.copy2(shots / name, release / target)
 shutil.copytree(root / 'licenses', release / 'licenses', dirs_exist_ok=True)
-probe = root / 'captures/npc-probe-v0.8-final/npc-probe.md'
+probe = root / 'captures/npc-probe-20261017-012725/npc-probe.md'
 if probe.is_file():
     shutil.copy2(probe, release / 'npc-probe.md')
 digest = hashlib.sha256(exe.read_bytes()).hexdigest()

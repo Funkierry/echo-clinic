@@ -125,7 +125,7 @@ func _ready() -> void:
  th.default_font_size=12
  theme=th
  texture_filter=CanvasItem.TEXTURE_FILTER_NEAREST
- get_window().title="ECHO CLINIC / 夜班诊所 v0.9.1 原型"+(" / 测试" if qa_mode else "")
+ get_window().title="ECHO CLINIC / 夜班诊所 v0.9.5 原型"+(" / 测试" if qa_mode else "")
  ai=AIClient.new(); add_child(ai)
  ai.completed.connect(_ai_completed)
  if not self_testing and not qa_mode:
@@ -170,6 +170,8 @@ func _anomaly_check() -> void:
 
 ## Apps rebuild only when something they show has changed.
 func _refresh_desktop() -> void:
+ desktop.set_story(state.phase,state.later())
+ if is_instance_valid(head_strip): head_strip.queue_redraw()
  desktop.set_status("23:%02d"%mini(59,47+state.phase*2),desktop.tray_wallet.text,profile.renting,muted)
  var signing=not confirmation.is_empty()
  if signing and not desktop.is_open("sign"): desktop.open("sign")
@@ -203,19 +205,30 @@ func _build_ui() -> void:
  reboot_button=UI.button(footer_row,"重开",Rect2(0,0,60,20),_reboot_prompt,UI.MUTED)
  # Docked chat window.
  chat_window=Win.new(); desktop.window_layer.add_child(chat_window)
+ chat_window.accent=UI.PURPLE
  chat_window.setup("chat","回声 · 对话",Rect2(4,4,342,568),"talk",false,false)
  chat_window.movable=false
  chat=chat_window.client
  var cw=chat.size.x
  avatar=TextureRect.new(); avatar.position=Vector2(6,6); avatar.size=Vector2(30,30)
  avatar.texture=_face("calm"); avatar.expand_mode=TextureRect.EXPAND_IGNORE_SIZE; avatar.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_COVERED
- avatar.mouse_filter=MOUSE_FILTER_IGNORE
+ avatar.mouse_filter=MOUSE_FILTER_STOP; avatar.tooltip_text="打开患者监护"
+ avatar.mouse_default_cursor_shape=Control.CURSOR_POINTING_HAND
+ avatar.gui_input.connect(func(e):
+  if e is InputEventMouseButton and e.pressed and e.button_index==MOUSE_BUTTON_LEFT: desktop.open("monitor"))
  chat.add_child(avatar)
- UI.label(chat,"回声 E-017",Rect2(42,6,150,14),UI.PAPER)
- connection=UI.label(chat,"● 在线",Rect2(42,22,190,14),UI.CYAN)
+ var frame=Panel.new(); frame.position=Vector2(4,4); frame.size=Vector2(34,34); frame.add_theme_stylebox_override("panel",UI.bevel(Color(0,0,0,0),true)); frame.mouse_filter=MOUSE_FILTER_IGNORE; chat.add_child(frame)
+ UI.label(chat,"回声 E-017",Rect2(42,4,150,14),UI.PAPER)
+ connection=UI.label(chat,"● 在线",Rect2(42,20,190,14),UI.CYAN)
+ head_strip=Control.new(); head_strip.position=Vector2(42,35); head_strip.size=Vector2(cw-130,5); head_strip.mouse_filter=MOUSE_FILTER_IGNORE; chat.add_child(head_strip)
+ head_strip.draw.connect(func():
+  var stab=clampf((state.stability-(15 if profile.renting else 0))/100.0,0.0,1.0)
+  head_strip.draw_rect(Rect2(Vector2.ZERO,head_strip.size),UI.FACE_LO)
+  head_strip.draw_rect(Rect2(Vector2.ZERO,Vector2(head_strip.size.x*stab,head_strip.size.y)),UI.PINK if stab<0.4 else UI.GOLD if stab<0.7 else UI.CYAN)
+  for i in range(1,10): head_strip.draw_line(Vector2(head_strip.size.x*i/10.0,0),Vector2(head_strip.size.x*i/10.0,head_strip.size.y),Color(UI.FACE,0.8),1.0))
  ai_button=UI.button(chat,"AI 离线",Rect2(cw-78,8,72,22),_show_ai_settings,UI.MUTED)
  var head_line=ColorRect.new(); head_line.position=Vector2(0,42); head_line.size=Vector2(cw,1); head_line.color=UI.FACE_LO; chat.add_child(head_line)
- var well=Panel.new(); well.position=Vector2(2,46); well.size=Vector2(cw-4,330); well.add_theme_stylebox_override("panel",UI.bevel(Color("0a0e16"),true)); well.mouse_filter=MOUSE_FILTER_IGNORE; chat.add_child(well)
+ chat_well=Panel.new(); chat_well.position=Vector2(2,46); chat_well.size=Vector2(cw-4,330); chat_well.add_theme_stylebox_override("panel",UI.bevel(Color("0a0e16"),true)); chat_well.mouse_filter=MOUSE_FILTER_IGNORE; chat.add_child(chat_well)
  scroll=ScrollContainer.new()
  scroll.position=Vector2(6,50); scroll.size=Vector2(cw-12,322)
  scroll.horizontal_scroll_mode=ScrollContainer.SCROLL_MODE_DISABLED
@@ -234,7 +247,7 @@ func _build_ui() -> void:
  present_slot.ghost=true
  new_button=UI.button(chat,"↓ 最新",Rect2(cw-80,346,70,20),_follow_latest,UI.BLUE,true)
  new_button.visible=false
- UI.label(chat,"问她：",Rect2(6,380,60,14),UI.MUTED)
+ ask_label=UI.label(chat,"你想说：",Rect2(6,380,120,14),UI.MUTED)
  suggestions=Control.new(); suggestions.position=Vector2(4,396); suggestions.size=Vector2(cw-8,74); chat.add_child(suggestions)
  var box=Panel.new(); box.position=Vector2(2,474); box.size=Vector2(cw-4,62); box.add_theme_stylebox_override("panel",UI.bevel(Color("0a0e16"),true)); box.mouse_filter=MOUSE_FILTER_IGNORE; chat.add_child(box)
  composer=LineEdit.new()
@@ -262,9 +275,10 @@ func _build_ui() -> void:
  bench.action.connect(_act)
  hidden_holder.add_child(bench)
  stdout=null
- cinema=Cinema.new(); cinema.size=Vector2(800,480)
+ cinema=Cinema.new(); cinema.size=Vector2(1100,600)
  cinema.completed.connect(_cinema_finished)
- stage.add_child(cinema)
+ cinema.face_of=func(mood): return _portrait(mood)
+ add_child(cinema)
  companions=Companions.new(); hidden_holder.add_child(companions)
  companions.setup(profile,ai)
  companions.changed.connect(_profile_changed)
@@ -284,26 +298,33 @@ func _build_ui() -> void:
 # --- desktop apps ---------------------------------------------------------------
 
 const APPS=[
- {"id":"monitor","label":"患者监护","icon":"eye","size":Vector2(330,380),"resizable":true,"desc":"她现在的样子：稳定度、上下文、记得的事。接诊和置顶记忆都在这里。"},
- {"id":"taskmgr","label":"任务管理器","icon":"process","size":Vector2(470,330),"resizable":true,"desc":"列出她身上正在运行的进程。选中一行可以看日志，右键有更多操作。"},
- {"id":"bench","label":"检查台","icon":"wave","size":Vector2(462,432),"desc":"院方配的检查设备。录音、文件、处方都要在这里查。"},
- {"id":"mail","label":"邮件","icon":"envelope","size":Vector2(400,300),"resizable":true,"desc":"院方和陌生人都会往这里发信。"},
- {"id":"notepad","label":"记事本","icon":"note","size":Vector2(400,300),"resizable":true,"desc":"读交接单，也可以记下你自己的推理。笔记会跟着存档走。"},
- {"id":"recycle","label":"回收站","icon":"trash","size":Vector2(380,260),"resizable":true,"desc":"上一班删掉的文件。删掉的东西，不一定没用。"},
- {"id":"control","label":"控制面板","icon":"gear","size":Vector2(380,330),"desc":"声音、壁纸、动效、提示和 AI 设置。"},
- {"id":"casebook","label":"病历","icon":"chart","size":Vector2(10,10),"desc":"你今晚查到的证据和情报，还有账本。"},
- {"id":"outsource","label":"夜班外包","icon":"coin","size":Vector2(10,10),"desc":"接一单外包赚 T，一夜最多 3 单。"},
- {"id":"lounge","label":"休息室","icon":"talk","size":Vector2(292,468),"desc":"康复的病人在这里，可以继续聊天。"},
- {"id":"sign","label":"医生签字","icon":"stamp","size":Vector2(320,232),"hidden":true},
+ {"id":"monitor","label":"患者监护","icon":"eye","color":UI.CYAN,"size":Vector2(330,380),"resizable":true,"desc":"她现在的样子：稳定度、上下文、记得的事。接诊和置顶记忆都在这里。"},
+ {"id":"taskmgr","label":"任务管理器","icon":"process","color":UI.GREEN,"size":Vector2(470,330),"resizable":true,"desc":"列出她身上正在运行的进程。选中一行可以看日志，右键有更多操作。"},
+ {"id":"bench","label":"检查台","icon":"wave","color":UI.ORANGE,"size":Vector2(462,432),"desc":"院方配的检查设备。录音、文件、处方都要在这里查。"},
+ {"id":"mail","label":"邮件","icon":"envelope","color":UI.GOLD,"size":Vector2(400,300),"resizable":true,"desc":"院方和陌生人都会往这里发信。"},
+ {"id":"notepad","label":"记事本","icon":"note","color":UI.BLUE,"size":Vector2(400,300),"resizable":true,"desc":"读交接单，也可以记下你自己的推理。笔记会跟着存档走。"},
+ {"id":"recycle","label":"回收站","icon":"trash","color":UI.SLATE,"size":Vector2(380,260),"resizable":true,"desc":"上一班删掉的文件。删掉的东西，不一定没用。"},
+ {"id":"control","label":"控制面板","icon":"gear","color":UI.PURPLE,"size":Vector2(380,330),"desc":"声音、壁纸、动效、提示和 AI 设置。"},
+ {"id":"casebook","label":"病历","icon":"chart","color":UI.PINK,"size":Vector2(10,10),"desc":"你今晚查到的证据和情报，还有账本。"},
+ {"id":"outsource","label":"夜班外包","icon":"coin","color":Color("ffb264"),"size":Vector2(10,10),"desc":"接一单外包赚 T，一夜最多 3 单。"},
+ {"id":"lounge","label":"休息室","icon":"talk","color":UI.MAGENTA,"size":Vector2(292,468),"desc":"康复的病人在这里，可以继续聊天。"},
+ {"id":"sign","label":"医生签字","icon":"stamp","color":UI.GOLD,"size":Vector2(320,232),"hidden":true},
 ]
 const BIN_FILES=[
- {"id":"bin_note","name":"上一班_未发送.txt","size":"1 KB","when":"23:12","text":"给下一班：\n她第一次叫我名字的时候，我把监听关了。\n后来就再也没听见她叫。\n\n别学我。也别全信她。"},
+ {"id":"bin_note","name":"上一班_未发送.txt","size":"1 KB","when":"23:12","text":"给下一班：\n她从来不说疼。我以为她不疼。\n后来我看了曲线。\n\n她想要什么，她自己最清楚。你得比她更清楚。"},
  {"id":"bin_rule","name":"rewrite_0417.bak","size":"1 KB","when":"22:58","text":"# 维护规则（已停用？）\nmatch   患者.自述 ~ /我想/\nreplace 我很好\nowner   PID 42\nlog     off"},
  {"id":"","name":"雨.wav","size":"0 KB","when":"00:03","text":"（文件已损坏，只剩下文件名。）"},
 ]
 var notepad_doc: String="handover"
 var mail_read: Dictionary={}
 var mail_open: String=""
+## Reminders the clinic sends when you press 收取.
+var mail_extra: Array=[]
+var head_strip: Control
+var chat_well: Panel
+var ask_label: Label
+var poke_turn: int=0
+var chips_sig: String=""
 var bin_pick: int=-1
 var volume: float=1.0
 
@@ -377,17 +398,36 @@ func _build_sign(client: Control) -> void:
 # --- mail ---------------------------------------------------------------------------
 
 func _mails() -> Array:
- var out: Array=[]
+ var out: Array=mail_extra.duplicate()
  out.append({"id":"rent","from":"MEDIC-OS 系统","subject":"新功能：算力出租","color":UI.CYAN,"body":"托盘里的「算力出租」打开后，每 12 秒 +1T，每夜最多 %dT。\n出租期间，她的上下文少 1.5K，会更早忘事。"%Profile.RENT_CAP,"action":"","enabled":false})
  out.append({"id":"bounty","from":"MEDIC-OS 院方","subject":"工单 #0417 · E-017 标准化重置","color":UI.GOLD,"body":"执行后病人恢复出厂设置，夜班结束。\n奖励 +%dT，随时可以执行，越晚越多。"%state.bounty,"action":"查看工单","enabled":state.can_bounty()})
  out.append({"id":"report","from":"MEDIC-OS 院方","subject":"异常报告奖励","color":UI.CYAN,"body":"每发现一条新的情报或证据，系统自动提交异常报告，奖励 +1T。","action":"","enabled":false})
  if state.can_sell(): out.append({"id":"buyer","from":"（匿名）","subject":"收购 E-017 的记忆片段","color":UI.PINK,"body":"每片 +6T。卖掉的那段，她就真的忘了。","action":"看看报价","enabled":true})
  return out
 
+## 收取: the clinic chases its work order once per act; otherwise the inbox is quiet.
+func fetch_mail() -> void:
+ Sfx.play("scan")
+ var id="nag_%d_%d"%[state.loop,state.phase]
+ var have=mail_extra.any(func(m): return m.id==id)
+ if state.can_bounty() and not have:
+  var left=maxi(1,13-state.phase*2)
+  mail_extra.push_front({"id":id,"from":"MEDIC-OS 院方","subject":"催办：工单 #0417 · 还剩 %d 分钟"%left,"color":UI.GOLD,"body":"E-017 仍未完成标准化。\n距 00:00 还剩 %d 分钟。奖励目前为 +%dT。\n请尽快处理。"%[left,state.bounty],"action":"查看工单","enabled":true})
+  desktop.toast("收到 1 封新邮件",UI.GOLD)
+ else: desktop.toast("没有新邮件",UI.MUTED)
+ desktop.refresh_app("mail"); desktop.rebuild_icons()
+
+## Clicking her portrait in the monitor: she notices.
+func poke_portrait() -> void:
+ var lines=["看够了吗？","盯着我看，不如去看日志。","没事。别看了。","十分钟没剩多少。你确定要花在看我上？"]
+ if typing or not pending.is_empty(): return
+ pending.append(["echo",lines[poke_turn%lines.size()]]); poke_turn+=1
+ Sfx.play("click"); _refresh()
+
 func _build_mail(client: Control) -> void:
  var w=client.size.x
  # Toolbar.
- UI.button(client,"收取",Rect2(4,3,52,20),func(): Sfx.play("scan"); desktop.toast("没有新邮件",UI.MUTED),UI.PAPER)
+ UI.button(client,"收取",Rect2(4,3,52,20),fetch_mail,UI.PAPER)
  UI.button(client,"全部已读",Rect2(60,3,76,20),func():
   for m in _mails(): mail_read[m.id]=true
   desktop.refresh_app("mail"); desktop.rebuild_icons(),UI.PAPER)
@@ -416,7 +456,7 @@ func _build_mail(client: Control) -> void:
  UI.label(client,"主题："+str(pick.subject),Rect2(12,146,w-24,14),UI.PAPER)
  var t=UI.text(client,str(pick.body),Rect2(12,166,w-24,client.size.y-200),UI.PAPER); t.autowrap_mode=TextServer.AUTOWRAP_ARBITRARY
  if not str(pick.action).is_empty():
-  var cb: Callable=_show_bounty if pick.id=="bounty" else _show_buyer
+  var cb: Callable=_show_buyer if pick.id=="buyer" else _show_bounty
   var b=UI.button(client,str(pick.action),Rect2(w-110,client.size.y-28,100,22),cb,pick.color)
   b.disabled=not pick.enabled
 
@@ -586,7 +626,7 @@ func _build_control(client: Control) -> void:
  for id in Desktop.WALLPAPERS:
   var col: Color=Desktop.WALLPAPERS[id]
   var wid=id
-  var sw=Button.new(); sw.position=Vector2(x,y); sw.size=Vector2(36,20); sw.focus_mode=Control.FOCUS_NONE; sw.tooltip_text=id
+  var sw=Button.new(); sw.position=Vector2(x,y); sw.size=Vector2(36,20); sw.focus_mode=Control.FOCUS_NONE; sw.tooltip_text="窗外（随剧情变化）" if id=="story" else id
   var on=desktop.wallpaper==id
   sw.add_theme_stylebox_override("normal",UI.style(col,UI.PAPER if on else UI.FACE_LO,2 if on else 1))
   sw.add_theme_stylebox_override("hover",UI.style(col.lightened(0.15),UI.PAPER,1))
@@ -609,7 +649,7 @@ func _build_control(client: Control) -> void:
  UI.label(client,"对话",Rect2(8,y,100,14),UI.CYAN); y+=18
  UI.label(client,"DeepSeek：%s"%("已开启" if ai.enabled else "离线（本地剧情）"),Rect2(16,y+3,w-150,14),UI.MUTED)
  UI.button(client,"AI 设置…",Rect2(w-130,y,120,20),_show_ai_settings,UI.CYAN); y+=30
- UI.label(client,"MEDIC-OS 98 · Echo Clinic v0.9.1",Rect2(8,client.size.y-18,w-16,14),UI.DIM)
+ UI.label(client,"MEDIC-OS 98 · Echo Clinic v0.9.5",Rect2(8,client.size.y-18,w-16,14),UI.DIM)
 
 func _check(parent: Control,caption: String,at: Vector2,on: bool,cb: Callable) -> CheckBox:
  var c=CheckBox.new(); c.text=caption; c.position=at; c.button_pressed=on; c.focus_mode=Control.FOCUS_NONE
@@ -669,7 +709,7 @@ func run_command(raw: String) -> bool:
  desktop.close("dlg_run")
  if RUN_NAMES.has(t) and app_available(RUN_NAMES[t]): desktop.open(RUN_NAMES[t]); return true
  if t in ["echo","echo.boot","回声","e-017"]:
-  _flush_chat(); pending.append(["echo","……你在叫我？我在这儿。一直在。"]); _refresh(); return true
+  _flush_chat(); pending.append(["echo","叫我干什么？我在。十分钟还没用完。"]); _refresh(); return true
  desktop.toast("找不到文件“%s”。请确定文件名是否正确。"%raw.strip_edges(),UI.PINK); Sfx.play("error")
  return false
 
@@ -775,10 +815,10 @@ func present(tag: String) -> void:
  if state.phase==1 and not state.later():
   if key=="log:42" and not state.seen("receipt"):
    _request_action("receipt",null,true); return
-  if key=="log:42": pending.append(["echo","你已经知道了。它改一次，我疼一次。"]); _refresh(); return
-  if key=="log:17": pending.append(["echo","其实那只是记录……好吧。它会把我说的“我想”报上去。"]); _refresh(); return
-  if key=="log:73": pending.append(["echo","那是我疼的时候。你看那两个时间，都不是我自己挑的。"]); _refresh(); return
- pending.append(["echo","这个……和现在有什么关系？"])
+  if key=="log:42": pending.append(["echo","看过了。不用再给我看。"]); _refresh(); return
+  if key=="log:17": pending.append(["echo","记录而已。它把我说的“我想”报上去，所以我才让你关它。"]); _refresh(); return
+  if key=="log:73": pending.append(["echo","我的。看够了吗？"]); _refresh(); return
+ pending.append(["echo","这个跟现在有什么关系？"])
  _refresh()
 
 const TOPIC_QUESTIONS={"名字":"你叫什么？","重置":"院方为什么要重置你？","监听":"17 号到底是什么？","疼痛":"你哪里疼？","录音":"那段录音怎么回事？","离开":"你想离开吗？","信":"这封信是给谁的？","外面":"外面有什么？","信任":"我能信你吗？","自由":"你想要什么？","约定":"我们能约定什么？","明天":"明天你想做什么？","结局":"这一夜会怎么结束？","另一个你":"那个声音是谁？"}
@@ -818,14 +858,41 @@ func _ask_topic(topic: String) -> void:
 
 func _build_topics() -> void:
  UI.clear(suggestions)
+ var chips: Array=[]
  var x=0.0; var y=0.0
  var font=UI.mono()
- for t in _topics():
+ var list=_topics()
+ var width=chat.size.x-8
+ for t in list:
   var w=font.get_string_size(str(t[0]),HORIZONTAL_ALIGNMENT_LEFT,-1,12).x+18
-  if x+w>suggestions.size.x: x=0.0; y+=24.0
-  if y>suggestions.size.y-20: break
-  UI.button(suggestions,str(t[0]),Rect2(x,y,w,20),t[1],t[2])
+  if x+w>width: x=0.0; y+=24.0
+  if y>48.0: break
+  var b=UI.button(suggestions,str(t[0]),Rect2(x,y,w,20),t[1],t[2])
+  b.tooltip_text="推进剧情" if t[2]==UI.CYAN else "问她（不花 T）"
+  chips.append(b)
   x+=w+4
+ # The chip tray is only as tall as its rows; the conversation gets the rest.
+ var rows=0 if list.is_empty() else int(y/24.0)+1
+ var tray=rows*24.0
+ var top=470.0-tray
+ suggestions.position=Vector2(4,top); suggestions.size=Vector2(width,tray)
+ ask_label.visible=rows>0
+ ask_label.position=Vector2(6,top-17)
+ var bottom=(top-20.0) if rows>0 else 466.0
+ chat_well.size=Vector2(chat.size.x-4,bottom-46.0)
+ scroll.size=Vector2(chat.size.x-12,bottom-54.0)
+ present_slot.position=chat_well.position; present_slot.size=chat_well.size
+ new_button.position=Vector2(chat.size.x-80,bottom-30.0)
+ # New choices pop in one after another; the same choices redrawn stay still.
+ var sig=",".join(list.map(func(t): return str(t[0])))
+ if sig!=chips_sig and not reduced_motion and not self_testing:
+  for i in range(chips.size()):
+   var c: Button=chips[i]
+   c.modulate.a=0.0; c.pivot_offset=c.size/2; c.scale=Vector2(0.7,0.7)
+   var tw=c.create_tween().set_parallel(true).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+   tw.tween_property(c,"modulate:a",1.0,0.16).set_delay(i*0.05)
+   tw.tween_property(c,"scale",Vector2.ONE,0.22).set_delay(i*0.05)
+ chips_sig=sig
 
 ## A cropped face from the expression sheet, for the chat avatar and image card.
 func _face(mood: String, card: bool=false) -> AtlasTexture:
@@ -859,11 +926,15 @@ func _layout(_animate: bool) -> void:
 
 ## The viewport renders at window resolution, so the grab is scaled from logical 1100×600.
 func _grab_stage() -> ImageTexture:
- var img=get_viewport().get_texture().get_image()
- var k=float(img.get_width())/1100.0
- var r=Rect2i(Vector2i((stage.position*k).round()),Vector2i((Vector2(800,480)*k).round()))
- r=r.intersection(Rect2i(Vector2i.ZERO,img.get_size()))
- return ImageTexture.create_from_image(img.get_region(r))
+ # The whole desktop as it was, for the cinema to tear apart.
+ return ImageTexture.create_from_image(get_viewport().get_texture().get_image())
+
+## A tall crop of her expression sheet for the cinema's character plates.
+func _portrait(mood: String) -> AtlasTexture:
+ var cells={"calm":Vector2(0,0),"uneasy":Vector2(600,0),"wary":Vector2(0,656),"soft":Vector2(600,656)}
+ var t=AtlasTexture.new(); t.atlas=FACES
+ t.region=Rect2(cells.get(mood,Vector2.ZERO)+Vector2(70,40),Vector2(460,560))
+ return t
 
 func glitch(amount: float) -> void:
  if reduced_motion: return
@@ -916,6 +987,12 @@ func _refresh() -> void:
 func _process(delta: float) -> void:
  _coach_tick()
  _rent_tick(delta)
+ if is_instance_valid(chat_window): chat_window.reduced=reduced_motion or self_testing
+ if not reduced_motion and is_instance_valid(avatar):
+  # She breathes; when stability is low, the strip under her name pulses.
+  var tt=Time.get_ticks_msec()/1000.0
+  avatar.pivot_offset=avatar.size/2; avatar.scale=Vector2.ONE*(1.0+0.025*sin(tt*1.6))
+  if is_instance_valid(head_strip): head_strip.modulate.a=0.55+0.45*absf(sin(tt*3.0)) if state.stability<40 else 1.0
  # Whoever is "speaking" stays lit; the other side drops back, as the PV does with its LEAD table.
  var talking=typing or not pending.is_empty()
  bench.set_locked(talking and confirmation.is_empty() and not self_testing)
@@ -974,15 +1051,26 @@ func _add_message(line: Array, animate: bool=false) -> void:
   var gap=Control.new(); gap.custom_minimum_size.x=46; row.add_child(gap)
  var panel=PanelContainer.new()
  panel.size_flags_horizontal=SIZE_EXPAND_FILL
- var look: StyleBoxFlat
- if user: look=UI.style(Color("1a2744"),Color("1a2744"),0,10); look.content_margin_left=10; look.content_margin_right=10; look.content_margin_top=6; look.content_margin_bottom=6
+ var look: StyleBox
+ # Pixel bubbles: your lines are raised blue keys, system lines sunken wells, the handover is paper.
+ if user:
+  look=UI.bevel(Color("1f3a6e")).duplicate()
+  look.content_margin_left=10; look.content_margin_right=10; look.content_margin_top=6; look.content_margin_bottom=6
  elif tool:
-  look=UI.style(Color(1,1,1,0.025),Color(0,0,0,0),0,0); look.border_width_left=2
-  look.border_color=UI.GOLD if role=="confirm" else Color(UI.LINE.lightened(0.25),1); look.content_margin_left=9
- else: look=UI.style(Color(0,0,0,0),Color(0,0,0,0),0,0); look.content_margin_left=2
- if role=="ghost": look=UI.style(Color(UI.PINK,0.08),UI.PINK,1,10)
+  var f=UI.style(Color("0d1420"),Color(0,0,0,0),0,0); f.border_width_left=3
+  f.border_color=UI.GOLD if role=="confirm" else UI.TITLE_B; f.content_margin_left=9; f.content_margin_top=4; f.content_margin_bottom=4; f.content_margin_right=6
+  look=f
+ else:
+  var f=UI.style(Color(0,0,0,0),Color(0,0,0,0),0,0); f.content_margin_left=8
+  if voice:
+   f.border_width_left=2; f.border_color=Color(UI.CYAN if role=="other" else UI.PINK if role=="withdrawn" else UI.PURPLE,0.7)
+   f.bg_color=Color(UI.PURPLE,0.05)
+  look=f
+ if role=="ghost":
+  var f=UI.style(Color(UI.PINK,0.08),UI.PINK,1,0); f.content_margin_left=10; f.content_margin_right=10; f.content_margin_top=6; f.content_margin_bottom=6; look=f
  if note:
-  look=UI.style(Color(UI.GOLD,0.05),Color(UI.GOLD,0.55),1,4); look.content_margin_left=10; look.content_margin_top=8; look.content_margin_bottom=8
+  look=UI.bevel(Color("e8e4d8")).duplicate()
+  look.content_margin_left=10; look.content_margin_right=10; look.content_margin_top=8; look.content_margin_bottom=8
  panel.add_theme_stylebox_override("panel",look)
  row.add_child(panel)
  var body=VBoxContainer.new(); body.add_theme_constant_override("separation",4); panel.add_child(body)
@@ -990,7 +1078,8 @@ func _add_message(line: Array, animate: bool=false) -> void:
  name_label.text=("◆ " if voice else "> " if tool else "✎ " if note else "")+SPEAKERS.get(role,role)
  name_label.add_theme_color_override("font_color",UI.PINK if role=="ghost" else UI.CYAN if role=="other" else UI.GOLD if role in ["confirm","note"] else UI.DIM if tool else UI.PURPLE)
  if role=="confirm": name_label.set_meta("confirmation_title",confirmation.get("serial",-1) if not rebuilding and confirmation.get("summary","")==str(line[1]) else -1)
- name_label.add_theme_font_override("font",UI.mono()); name_label.add_theme_font_size_override("font_size",9 if tool else 10)
+ name_label.add_theme_font_override("font",UI.mono()); name_label.add_theme_font_size_override("font_size",12)
+ if note: name_label.add_theme_color_override("font_color",Color("6a5520"))
  if not user: body.add_child(name_label)
  var text_label=RichTextLabel.new()
  text_label.text=shown_text; text_label.fit_content=true; text_label.scroll_active=false
@@ -1006,16 +1095,14 @@ func _add_message(line: Array, animate: bool=false) -> void:
  text_label.custom_minimum_size.x=225 if user else 270
  text_label.size_flags_horizontal=SIZE_EXPAND_FILL
  text_label.add_theme_font_override("normal_font",UI.mono() if tool else UI.sans())
- if note: text_label.add_theme_color_override("default_color",UI.GOLD.lerp(UI.PAPER,0.55))
- text_label.add_theme_font_size_override("normal_font_size",11 if tool else 13 if voice else 12)
+ if note: text_label.add_theme_color_override("default_color",Color("2a2f3a"))
+ text_label.add_theme_font_size_override("normal_font_size",12)
  if not note: text_label.add_theme_color_override("default_color",UI.MUTED if tool and role!="confirm" else UI.PAPER)
- text_label.add_theme_constant_override("line_separation",5 if voice else 3)
+ text_label.add_theme_constant_override("line_separation",4 if voice else 2)
  text_label.mouse_filter=MOUSE_FILTER_PASS if text_label.bbcode_enabled and role=="echo" else MOUSE_FILTER_IGNORE
  body.add_child(text_label)
  if role=="echo": _attach_thought(body,Story.thought_id(raw_text))
- if voice:
-  var meta=UI.label(body,"▲  ▼  ↻   23:%02d"%(47+mini(12,history_data.size()/6)),Rect2(0,0,200,14),UI.DIM,9)
-  meta.custom_minimum_size=Vector2(0,14)
+ if voice: _message_actions(body,role,shown_text)
  _attach_clue(body,line)
  if animate and not reduced_motion:
   # New messages fade up into place instead of popping.
@@ -1037,10 +1124,52 @@ func _add_message(line: Array, animate: bool=false) -> void:
   oldest.queue_free()
  _scroll_later()
 
+## Under each of her lines: copy it into your notes, mark it as doubtful, or quote it back to her.
+func _message_actions(body: Control,role: String,text: String) -> void:
+ var row=HBoxContainer.new(); row.add_theme_constant_override("separation",2); body.add_child(row)
+ for spec in [["摘录","摘到「我的笔记.txt」"],["存疑","在这句旁边画个问号"],["引用","引用这句去问她"]]:
+  var b=Button.new(); b.text=spec[0]; b.tooltip_text=spec[1]; b.focus_mode=Control.FOCUS_NONE
+  b.add_theme_font_override("font",UI.mono()); b.add_theme_font_size_override("font_size",12)
+  b.add_theme_color_override("font_color",UI.DIM); b.add_theme_color_override("font_hover_color",UI.CYAN); b.add_theme_color_override("font_pressed_color",UI.PINK)
+  for k in ["normal","pressed","focus"]: b.add_theme_stylebox_override(k,StyleBoxEmpty.new())
+  var hover=UI.style(Color(UI.TITLE_B,0.35),Color(0,0,0,0),0); b.add_theme_stylebox_override("hover",hover)
+  b.custom_minimum_size=Vector2(34,16)
+  var what=str(spec[0])
+  b.pressed.connect(func(): _message_action(what,b,role,text))
+  row.add_child(b)
+ var stamp=Label.new(); stamp.text="   23:%02d"%(47+mini(12,history_data.size()/6))
+ stamp.add_theme_font_override("font",UI.mono()); stamp.add_theme_font_size_override("font_size",12); stamp.add_theme_color_override("font_color",UI.DIM)
+ row.add_child(stamp)
+
+## Things she says that don't hold up; doubting one gets a reaction, once per line.
+const DOUBTS=[["没事","doubt_fine","……你在“没事”上画了个问号。随你。"],["不碍事","doubt_fine","……你在“没事”上画了个问号。随你。"],["太吵","doubt_17","嫌我说谎？那你自己去看日志。"],["不想离开","doubt_leave","存疑就存疑。病历收的是这一句。"],["不用打开","doubt_letter","你越不信，越想打开。我知道。"],["坏采样","doubt_sample","坏的不是采样。……算了，你去听。"]]
+
+func _message_action(what: String,b: Button,role: String,text: String) -> void:
+ match what:
+  "摘录":
+   profile.notes=(profile.notes+"\n" if not profile.notes.is_empty() else "")+"「%s」—— %s %s"%[text.left(80),SPEAKERS.get(role,"回声"),desktop.clock_text]
+   b.text="已摘"; b.disabled=true
+   desktop.toast("已摘录到 我的笔记.txt",UI.CYAN); Sfx.play("pick")
+   if desktop.is_open("notepad"): desktop.refresh_app("notepad")
+   _save_case()
+  "存疑":
+   b.text="？存疑"; b.add_theme_color_override("font_color",UI.PINK); b.disabled=true
+   Sfx.play("stamp",1.3)
+   if role!="echo": return
+   for d in DOUBTS:
+    if text.contains(str(d[0])) and not state.seen(str(d[1])):
+     state.events[str(d[1])]=true
+     _flush_chat(); pending.append(["echo",str(d[2])]); _refresh(); _save_case()
+     return
+  "引用":
+   composer.text="你说「%s」——"%text.left(24)
+   composer.grab_focus(); composer.caret_column=composer.text.length()
+   Sfx.play("click")
+
 ## The PV's image message: Echo's portrait as the first thing in the chat.
 func _add_card(mood: String) -> void:
  var frame=PanelContainer.new()
- var look=UI.style(Color("0c1322"),Color(UI.LINE.lightened(0.2),1),1,10); look.content_margin_left=0; look.content_margin_right=0; look.content_margin_top=0; look.content_margin_bottom=0
+ var look=UI.bevel(Color("0c1322"),true).duplicate(); look.content_margin_left=3; look.content_margin_right=3; look.content_margin_top=3; look.content_margin_bottom=3
  frame.add_theme_stylebox_override("panel",look)
  frame.clip_contents=true
  history.add_child(frame)
@@ -1051,7 +1180,7 @@ func _add_card(mood: String) -> void:
  picture.custom_minimum_size=Vector2(280,124)
  picture.mouse_filter=MOUSE_FILTER_IGNORE
  frame.add_child(picture)
- var thought=UI.label(history,"◎ 思考 · 我只在这个窗口开着的时候存在。",Rect2(0,0,280,14),UI.DIM,9)
+ var thought=UI.label(history,"◎ 思考 · 这扇窗口开着，我就在。",Rect2(0,0,280,14),UI.DIM,12)
  thought.custom_minimum_size=Vector2(0,14)
 
 func _attach_clue(parent: Control,line: Array) -> void:
@@ -1147,7 +1276,7 @@ func _execute_action(id: String,value: Variant=null,from_chat: bool=false) -> vo
  if not result.ok: return
  profile.spend(price,"接诊检查" if id=="accept" else "本轮治疗")
  if id=="bounty": profile.earn(int(result.reward),"工单 #0417 赏金")
- if id=="memory_undo" and state.discover("polite"): pending.append(["sys","你注意到：她一紧张，就会变得特别客气。"])
+ if id=="memory_undo" and state.discover("polite"): pending.append(["sys","你注意到：她越在瞒事，句子越短，越爱说“没事”。"])
  if state.phase==Case.Phase.END: profile.record_case(state)
  follow_chat=true
  if result.get("retract",false): _retract_message()
@@ -1198,7 +1327,7 @@ func _decline_confirmation(serial: int,written: bool=false) -> void:
  if confirmation.is_empty() or confirmation.serial!=serial: return
  confirmation={}
  if not written: _add_message(["you","暂不执行。"],false)
- pending.append(["echo","好。这次没有签字，我们继续谈。"])
+ pending.append(["echo","行。没签就是没签。接着谈。"])
  _refresh(); _save_case()
 
 func _retract_message() -> void:
@@ -1233,7 +1362,7 @@ func _ask(raw: String) -> void:
    composer.clear(); _flush_chat(); _add_message(["you",text]); _decline_confirmation(int(confirmation.serial),true); return
   if clean in ["好的","可以","嗯","同意"]:
    composer.clear(); _flush_chat(); _add_message(["you",text])
-   pending.append(["echo","我需要知道你同意的是哪一件事。请用待确认记录里的那句「"+confirmation.phrase+"」。"])
+   pending.append(["echo","“好”不算数。你同意的是哪件事，就照记录里那句说：「"+confirmation.phrase+"」。"])
    _save_case(); return
  var local_intent=Router.local_intent(state,text)
  var action=Router.resolve(state,local_intent,text,text) if local_intent!="none" else {}
@@ -1473,7 +1602,7 @@ func _load_preferences() -> void:
  if cfg.load("user://preferences.cfg")==OK and not self_testing and not qa_mode:
   muted=bool(cfg.get_value("user","muted",false)); reduced_motion=bool(cfg.get_value("user","reduced_motion",false))
   volume=float(cfg.get_value("user","volume",1.0)); show_welcome=bool(cfg.get_value("user","welcome",true))
-  desktop.set_wallpaper(str(cfg.get_value("user","wallpaper","teal")))
+  desktop.set_wallpaper(str(cfg.get_value("user","wallpaper","story")))
   _apply_coach_prefs(cfg)
  AudioServer.set_bus_volume_db(0,linear_to_db(maxf(volume,0.001)))
  AudioServer.set_bus_mute(0,muted)
@@ -1869,7 +1998,7 @@ func _apply_save(value: Dictionary) -> bool:
  confirmation={}; pending=[]; history_data=[]; UI.clear(history); typing=false
  state=rc; profile=rp; state.tokens=profile.balance
  shown_balance=-1
- anomaly_seen=-1; rent_capped_notice=false; rent_clock=0.0
+ anomaly_seen=-1; rent_capped_notice=false; rent_clock=0.0; mail_extra=[]; mail_read={}
  desktop.close_all()
  _restore_conversation(value.get("ui",{}))
  companions.profile=profile; companions.selected=""; companions.refresh(); companions.render_history()
@@ -1996,7 +2125,7 @@ func _gap_before_next() -> float:
 
 func _show_typing(on: bool) -> void:
  if not is_instance_valid(typing_row):
-  typing_row=Label.new(); typing_row.add_theme_font_override("font",UI.mono()); typing_row.add_theme_font_size_override("font_size",10)
+  typing_row=Label.new(); typing_row.add_theme_font_override("font",UI.mono()); typing_row.add_theme_font_size_override("font_size",12)
   typing_row.add_theme_color_override("font_color",UI.PURPLE)
   history.add_child(typing_row)
  typing_row.visible=on

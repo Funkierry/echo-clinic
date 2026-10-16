@@ -21,7 +21,7 @@ def run():
     target.add_argument('--exe', help='Exported Windows executable to test')
     parser.add_argument('--timeout', type=int, default=120)
     args = parser.parse_args()
-    output = ROOT / ('captures/v0.9.1-prototype-export' if args.exe else 'captures/v0.9.1-prototype')
+    output = ROOT / ('captures/v0.9.5-prototype-export' if args.exe else 'captures/v0.9.5-prototype')
     output.mkdir(parents=True, exist_ok=True)
     report_path = output / 'test-report.json'
     if report_path.exists():
@@ -58,8 +58,8 @@ def run():
     report = json.loads(report_path.read_text(encoding='utf-8'))
     if not report['passed'] or not all(report['checks'].values()):
         raise SystemExit(f'Tests failed. See {output / "run.log"}')
-    if report.get('version') != '0.9' or report['count'] < 344:
-        raise SystemExit('Expected the current v0.9 suite with at least 344 checks')
+    if report.get('version') != '0.9' or report['count'] < 366:
+        raise SystemExit('Expected the current v0.9 suite with at least 366 checks')
     print(f"PASS: {report['count']} checks. Report: {report_path}")
 
 
